@@ -2,8 +2,8 @@
 session_start();
 
 // --- KONFIGURASI DATABASE GTPS.CLOUD ---
-$db_host = "localhost"; 
-$db_user = "Mehangg"; // Jika username database berbeda di panel, silakan disesuaikan
+$db_host = "91.134.85.13"; 
+$db_user = "MehanGG"; 
 $db_pass = "123mehansgg456";
 $db_name = "Mehangg";
 
@@ -13,11 +13,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // Cek langsung ke database GTPS.CLOUD
+    // Cek langsung ke database
     $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
     if ($conn->connect_error) {
-        $pesan_login = "<div class='alert error'>Koneksi database gagal: Cek pengaturan DB.</div>";
+        // Pesan error diubah agar menampilkan detail dari server jika diblokir
+        $pesan_login = "<div class='alert error'>Koneksi database gagal: " . $conn->connect_error . "</div>";
     } else {
         $user_safe = $conn->real_escape_string($username);
         $pass_safe = $conn->real_escape_string($password);

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Clone (dengan Vision)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        body {
+            background-color: #343541;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            height: 95vh;
+            background-color: #40414f;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .user-message {
+            background-color: #2b2b36;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            background-color: #444654;
+            color: #ececf1;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+            border: 2px solid #565869;
+        }
+        .message .image-preview-message {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-container {
+            background-color: #40414f;
+            border-top: 1px solid #565869;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .image-preview {
+            background-color: #2b2b36;
+            border-radius: 20px;
+            padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 200px;
+            position: relative;
+            margin-bottom: 5px;
+        }
+        .image-preview img {
+            height: 40px;
+            width: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .image-preview button {
+            background: #6b6c7b;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background-color: #40414f;
+        }
+        #userInput {
+            flex: 1;
+            background-color: #2b2b36;
+            border: 1px solid #565869;
+            border-radius: 24px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        #userInput::placeholder {
+            color: #8e8ea0;
+        }
+        #userInput:focus {
+            border-color: #8e8ea0;
+        }
+        .file-upload, #sendButton {
+            background-color: #2b2b36;
+            border: 1px solid #565869;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ececf1;
+            font-size: 1.4rem;
+            transition: background 0.2s;
+        }
+        .file-upload:hover, #sendButton:hover {
+            background-color: #3e3f4b;
+        }
+        #sendButton {
+            border: none;
+            background-color: #19c37d;
+            color: white;
+            font-size: 1.2rem;
+        }
+        #sendButton:hover {
+            background-color: #15a06b;
+        }
+        #sendButton:disabled {
+            background-color: #565869;
+            cursor: not-allowed;
+        }
+        .typing-indicator {
+            background-color: #444654;
+            color: #ececf1;
+            padding: 12px 16px;
+            border-radius: 18px;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot-message">
+                Halo! Saya asisten AI. Saya bisa melihat gambar yang Anda kirim. Silakan tanya apa saja atau upload foto.
+            </div>
+        </div>
+        <div class="input-container">
+            <!-- Preview gambar yang dipilih -->
+            <div class="image-preview" id="imagePreview" style="display: none;">
+                <img id="previewImg" src="" alt="Preview">
+                <button id="removeImage">×</button>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Ketik pesan..." autocomplete="off">
+                <label for="fileInput" class="file-upload" title="Upload gambar">📷</label>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <button id="sendButton">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ========== KONFIGURASI ==========
+            const API_KEY = "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";
+            const MODEL = "gpt-4o-mini"; // Model yang mendukung vision (gpt-4o juga bisa)
+            const API_URL = "https://api.openai.com/v1/chat/completions";
+
+            // ========== STATE ==========
+            // Riwayat chat: system message tidak ditampilkan, tapi dikirim ke API
+            const messages = [
+                { role: "system", content: "Anda adalah asisten AI yang ramah dan membantu. Anda dapat melihat dan menganalisis gambar yang dikirim user." }
+            ];
+
+            // Variabel untuk menyimpan file gambar yang dipilih
+            let selectedImageFile = null;
+
+            // Elemen DOM
+            const chatContainer = document.getElementById('chatContainer');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            const removeImageBtn = document.getElementById('removeImage');
+
+            // ========== FUNGSI BANTU ==========
+            // Scroll ke bawah
+            function scrollToBottom() {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            // Tambah pesan ke UI (bisa teks atau kombinasi)
+            function addMessageToUI(role, text, imageDataUrl = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', role === 'user' ? 'user-message' : 'bot-message');
+
+                // Jika ada gambar, tampilkan bersama teks
+                if (imageDataUrl) {
+                    const contentDiv = document.createElement('div');
+                    contentDiv.classList.add('image-preview-message');
+
+                    if (text) {
+                        const textP = document.createElement('p');
+                        textP.textContent = text;
+                        textP.style.marginBottom = '8px';
+                        contentDiv.appendChild(textP);
+                    }
+
+                    const img = document.createElement('img');
+                    img.src = imageDataUrl;
+                    img.alt = 'Uploaded image';
+                    img.addEventListener('click', () => window.open(imageDataUrl, '_blank')); // klik untuk perbesar
+                    contentDiv.appendChild(img);
+
+                    messageDiv.appendChild(contentDiv);
+                } else {
+                    // Hanya teks
+                    messageDiv.textContent = text;
+                }
+
+                chatContainer.appendChild(messageDiv);
+                scrollToBottom();
+            }
+
+            // Tampilkan indikator "AI sedang mengetik"
+            function showTypingIndicator() {
+                const indicator = document.createElement('div');
+                indicator.classList.add('message', 'bot-message', 'typing-indicator');
+                indicator.id = 'typingIndicator';
+                indicator.textContent = '...';
+                chatContainer.appendChild(indicator);
+                scrollToBottom();
+            }
+
+            function removeTypingIndicator() {
+                const indicator = document.getElementById('typingIndicator');
+                if (indicator) indicator.remove();
+            }
+
+            // Kirim pesan ke API OpenAI
+            async function sendToAI(userMessageContent) {
+                // Siapkan salinan messages untuk dikirim
+                const apiMessages = messages.map(m => {
+                    // Pastikan kita tidak mengirim properti tambahan
+                    return { role: m.role, content: m.content };
+                });
+
+                // Tambahkan pesan user terbaru (dalam format yang sudah disiapkan)
+                apiMessages.push({ role: "user", content: userMessageContent });
+
+                const requestBody = {
+                    model: MODEL,
+                    messages: apiMessages,
+                    max_tokens: 1000,
+                };
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${API_KEY}`
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error?.message || `HTTP error ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const assistantReply = data.choices[0].message.content;
+
+                    // Simpan ke riwayat messages
+                    messages.push({ role: "assistant", content: assistantReply });
+                    // Tampilkan ke UI
+                    addMessageToUI('assistant', assistantReply);
+                } catch (error) {
+                    console.error('Error calling OpenAI:', error);
+                    addMessageToUI('assistant', `Maaf, terjadi kesalahan: ${error.message}`);
+                }
+            }
+
+            // Proses pengiriman pesan (dari input user)
+            async function handleSendMessage() {
+                const text = userInput.value.trim();
+                const hasImage = selectedImageFile !== null;
+
+                if (!text && !hasImage) return; // kosong
+
+                // Nonaktifkan tombol kirim sementara
+                sendButton.disabled = true;
+
+                // 1. Tampilkan pesan user di UI
+                let imageDataUrlForUI = null;
+                let imageDataUrlForAPI = null;
+
+                if (hasImage) {
+                    // Buat data URL untuk tampilan (sama dengan yang untuk API)
+                    imageDataUrlForUI = await fileToDataUrl(selectedImageFile);
+                    imageDataUrlForAPI = imageDataUrlForUI; // kita pakai data URL langsung
+                }
+
+                addMessageToUI('user', text, imageDataUrlForUI);
+
+                // 2. Siapkan content untuk API (sesuai format multimodal)
+                let apiContent;
+                if (hasImage) {
+                    // Format content array: teks + gambar
+                    apiContent = [
+                        { type: "text", text: text || "Apa yang ada di gambar ini?" },
+                        { type: "image_url", image_url: { url: imageDataUrlForAPI } }
+                    ];
+                } else {
+                    apiContent = text; // string biasa
+                }
+
+                // Simpan pesan user ke dalam riwayat (dengan format API)
+                messages.push({ role: "user", content: apiContent });
+
+                // 3. Bersihkan input & preview
+                userInput.value = '';
+                clearSelectedImage();
+
+                // 4. Tampilkan indikator mengetik AI
+                showTypingIndicator();
+
+                // 5. Kirim ke API
+                try {
+                    await sendToAI(apiContent);
+                } finally {
+                    removeTypingIndicator();
+                    sendButton.disabled = false;
+                }
+            }
+
+            // Helper: konversi file ke data URL (base64)
+            function fileToDataUrl(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(e);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Hapus gambar yang dipilih
+            function clearSelectedImage() {
+                selectedImageFile = null;
+                imagePreview.style.display = 'none';
+                previewImg.src = '';
+                fileInput.value = ''; // reset input file
+            }
+
+            // ========== EVENT LISTENERS ==========
+            // Kirim via tombol
+            sendButton.addEventListener('click', handleSendMessage);
+
+            // Kirim via enter (tanpa shift)
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+
+            // Upload gambar
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Validasi tipe file
+                if (!file.type.startsWith('image/')) {
+                    alert('Harap pilih file gambar.');
+                    return;
+                }
+
+                selectedImageFile = file;
+                // Tampilkan preview
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    previewImg.src = event.target.result;
+                    imagePreview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Hapus gambar
+            removeImageBtn.addEventListener('click', clearSelectedImage);
+
+            // Nonaktifkan tombol kirim saat tidak ada teks/gambar? (optional)
+            // Tapi kita handle di fungsi send
+
+            // Peringatan keamanan di console
+            console.warn('%cPERINGATAN: API key OpenAI terekspos di frontend. Jangan gunakan ini di produksi!', 'color: red; font-size: 16px; font-weight: bold;');
+        })();
+    </script>
+</body>
+</html>

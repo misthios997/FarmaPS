@@ -135,6 +135,13 @@
     <script>
         const API_URL = 'https://api.gtps.cloud/api/server/public/3587';
 
+        const tierNames = {
+            1: 'Bronze',
+            2: 'Gold',
+            3: 'Diamond',
+            4: 'Emerald'
+        };
+
         async function fetchServerStats() {
             try {
                 const response = await fetch(API_URL);
@@ -150,7 +157,10 @@
                 document.getElementById('players-online').innerText = data.players || data.online || '0';
                 document.getElementById('worlds-active').innerText = data.worlds || data.worlds_active || '0';
                 document.getElementById('ram-usage').innerText = data.ram || data.memory || '0 MB';
-                document.getElementById('server-tier').innerText = data.tier || 'Free';
+                
+                // Update Tier using mapping
+                const rawTier = data.tier;
+                document.getElementById('server-tier').innerText = tierNames[rawTier] || rawTier || 'Free';
                 
                 // Update Status Indicator
                 const statusText = document.getElementById('server-status');

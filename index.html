@@ -136,10 +136,10 @@
         const API_URL = 'https://api.gtps.cloud/api/server/public/3587';
 
         const tierNames = {
-            1: 'Bronze',
-            2: 'Gold',
-            3: 'Diamond',
-            4: 'Emerald'
+            "1": 'Bronze',
+            "2": 'Gold',
+            "3": 'Diamond',
+            "4": 'Emerald'
         };
 
         async function fetchServerStats() {
@@ -149,18 +149,23 @@
                 
                 const result = await response.json();
                 
-                // GTPS Cloud API usually wraps data inside a "data" object
+                // API GTPS Cloud biasanya membungkus data di dalam objek "data"
                 const data = result.data || result;
 
-                // Update DOM elements with fallback strings if undefined
-                document.getElementById('server-name').innerText = data.name || data.serverName || 'GTPS SERVER';
-                document.getElementById('players-online').innerText = data.players || data.online || '0';
-                document.getElementById('worlds-active').innerText = data.worlds || data.worlds_active || '0';
-                document.getElementById('ram-usage').innerText = data.ram || data.memory || '0 MB';
+                // Nama server
+                document.getElementById('server-name').innerText = data.name || data.serverName || data.server_name || 'GTPS SERVER';
                 
-                // Update Tier using mapping
-                const rawTier = data.tier;
-                document.getElementById('server-tier').innerText = tierNames[rawTier] || rawTier || 'Free';
+                // Cek multi-key untuk players, worlds, ram agar pasti tertangkap
+                document.getElementById('players-online').innerText = data.players || data.online || data.online_players || data.playerCount || '0';
+                document.getElementById('worlds-active').innerText = data.worlds || data.worlds_active || data.active_worlds || data.worldCount || '0';
+                
+                // Cek RAM
+                const ramData = data.ram || data.memory || data.ram_usage || data.memory_usage || '0';
+                document.getElementById('ram-usage').innerText = String(ramData).toLowerCase().includes('mb') || String(ramData).toLowerCase().includes('gb') ? ramData : ramData + ' MB';
+                
+                // Cek multi-key untuk TIER ID
+                const rawTier = data.tier_id || data.tierId || data.tier || data.plan_id || data.plan;
+                document.getElementById('server-tier').innerText = tierNames[String(rawTier)] || rawTier || 'Free';
                 
                 // Update Status Indicator
                 const statusText = document.getElementById('server-status');
@@ -187,10 +192,10 @@
             }
         }
 
-        // Fetch immediately on load
+        // Fetch langsung saat loading
         fetchServerStats();
 
-        // Refresh data every 15 seconds
+        // Refresh data otomatis setiap 15 detik
         setInterval(fetchServerStats, 15000);
     </script>
 </body>

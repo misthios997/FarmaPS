@@ -1,436 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Clone (dengan Vision)</title>
+    <title>GTPS Server Info</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
         body {
-            background-color: #343541;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            background-image: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
             min-height: 100vh;
         }
-        .container {
-            width: 100%;
-            max-width: 900px;
-            height: 95vh;
-            background-color: #40414f;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+
+        .glow-text-blue {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.4);
         }
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            line-height: 1.5;
-            word-wrap: break-word;
-            font-size: 0.95rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+        .glow-text-green {
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.8), 0 0 20px rgba(74, 222, 128, 0.4);
         }
-        .user-message {
-            background-color: #2b2b36;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
+
+        .btn-glow {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
         }
-        .bot-message {
-            background-color: #444654;
-            color: #ececf1;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
+
+        .btn-glow:hover {
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+            transform: translateY(-2px);
         }
-        .message img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 12px;
-            margin-top: 8px;
-            cursor: pointer;
-            border: 2px solid #565869;
+
+        .stat-icon {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .message .image-preview-message {
-            display: flex;
-            flex-direction: column;
-        }
-        .input-container {
-            background-color: #40414f;
-            border-top: 1px solid #565869;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .image-preview {
-            background-color: #2b2b36;
-            border-radius: 20px;
-            padding: 8px 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 200px;
-            position: relative;
-            margin-bottom: 5px;
-        }
-        .image-preview img {
-            height: 40px;
-            width: 40px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-        .image-preview button {
-            background: #6b6c7b;
-            border: none;
-            color: white;
+        
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #38bdf8;
             border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
         }
-        .input-wrapper {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            background-color: #40414f;
-        }
-        #userInput {
-            flex: 1;
-            background-color: #2b2b36;
-            border: 1px solid #565869;
-            border-radius: 24px;
-            padding: 14px 18px;
-            color: white;
-            font-size: 0.95rem;
-            outline: none;
-        }
-        #userInput::placeholder {
-            color: #8e8ea0;
-        }
-        #userInput:focus {
-            border-color: #8e8ea0;
-        }
-        .file-upload, #sendButton {
-            background-color: #2b2b36;
-            border: 1px solid #565869;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #ececf1;
-            font-size: 1.4rem;
-            transition: background 0.2s;
-        }
-        .file-upload:hover, #sendButton:hover {
-            background-color: #3e3f4b;
-        }
-        #sendButton {
-            border: none;
-            background-color: #19c37d;
-            color: white;
-            font-size: 1.2rem;
-        }
-        #sendButton:hover {
-            background-color: #15a06b;
-        }
-        #sendButton:disabled {
-            background-color: #565869;
-            cursor: not-allowed;
-        }
-        .typing-indicator {
-            background-color: #444654;
-            color: #ececf1;
-            padding: 12px 16px;
-            border-radius: 18px;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            font-style: italic;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="chat-container" id="chatContainer">
-            <div class="message bot-message">
-                Halo! Saya asisten AI. Saya bisa melihat gambar yang Anda kirim. Silakan tanya apa saja atau upload foto.
+<body class="flex flex-col items-center justify-center p-4">
+
+    <header class="text-center mt-10 mb-12">
+        <h1 class="text-5xl font-bold mb-3 glow-text-blue tracking-wider" id="server-name">GTPS SERVER</h1>
+        <p class="text-slate-400 text-lg">Live Server Statistics & Information</p>
+        <div class="mt-4 inline-flex items-center px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+            <span class="w-3 h-3 rounded-full bg-green-500 mr-2 shadow-[0_0_8px_#22c55e]" id="status-indicator"></span>
+            <span class="text-sm font-semibold tracking-wide" id="server-status">Menghubungkan...</span>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl">
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="glass-card rounded-2xl p-6 text-center transform transition duration-300 hover:scale-105 hover:border-sky-500/50">
+                <i class="fa-solid fa-users text-3xl mb-3 stat-icon"></i>
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">Players Online</h3>
+                <p class="text-3xl font-bold glow-text-blue" id="players-online"><span class="loader"></span></p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 text-center transform transition duration-300 hover:scale-105 hover:border-sky-500/50">
+                <i class="fa-solid fa-globe text-3xl mb-3 stat-icon"></i>
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">Worlds Active</h3>
+                <p class="text-3xl font-bold glow-text-blue" id="worlds-active"><span class="loader"></span></p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 text-center transform transition duration-300 hover:scale-105 hover:border-sky-500/50">
+                <i class="fa-solid fa-memory text-3xl mb-3 stat-icon"></i>
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">RAM Usage</h3>
+                <p class="text-3xl font-bold glow-text-blue" id="ram-usage"><span class="loader"></span></p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 text-center transform transition duration-300 hover:scale-105 hover:border-sky-500/50">
+                <i class="fa-solid fa-server text-3xl mb-3 stat-icon"></i>
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">Server Tier</h3>
+                <p class="text-3xl font-bold glow-text-blue" id="server-tier"><span class="loader"></span></p>
             </div>
         </div>
-        <div class="input-container">
-            <!-- Preview gambar yang dipilih -->
-            <div class="image-preview" id="imagePreview" style="display: none;">
-                <img id="previewImg" src="" alt="Preview">
-                <button id="removeImage">×</button>
+
+        <div class="glass-card rounded-3xl p-8 md:p-12 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-white">Informasi Server</h2>
+                <ul class="text-slate-300 space-y-3 mb-6">
+                    <li class="flex items-center justify-center md:justify-start">
+                        <i class="fa-solid fa-check text-green-400 mr-3"></i> 24/7 Uptime dari GTPS Cloud
+                    </li>
+                    <li class="flex items-center justify-center md:justify-start">
+                        <i class="fa-solid fa-check text-green-400 mr-3"></i> Komunitas yang Aktif & Solid
+                    </li>
+                    <li class="flex items-center justify-center md:justify-start">
+                        <i class="fa-solid fa-check text-green-400 mr-3"></i> Minim Lag & Performa Stabil
+                    </li>
+                </ul>
             </div>
-            <div class="input-wrapper">
-                <input type="text" id="userInput" placeholder="Ketik pesan..." autocomplete="off">
-                <label for="fileInput" class="file-upload" title="Upload gambar">📷</label>
-                <input type="file" id="fileInput" accept="image/*" style="display: none;">
-                <button id="sendButton">➤</button>
+            
+            <div class="flex-none w-full md:w-auto">
+                <a href="https://dash.gtps.cloud/how-to-play/3587" target="_blank" class="block w-full text-center bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold py-4 px-10 rounded-xl btn-glow text-lg uppercase tracking-wide">
+                    <i class="fa-solid fa-download mr-2"></i> Download Host
+                </a>
             </div>
         </div>
-    </div>
+
+    </main>
+
+    <footer class="mt-16 text-slate-500 text-sm pb-8">
+        &copy; <script>document.write(new Date().getFullYear())</script> GTPS Server. Powered by GTPS Cloud.
+    </footer>
 
     <script>
-        (function() {
-            // ========== KONFIGURASI ==========
-            const API_KEY = "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";
-            const MODEL = "gpt-4o-mini"; // Model yang mendukung vision (gpt-4o juga bisa)
-            const API_URL = "https://api.openai.com/v1/chat/completions";
+        const API_URL = 'https://api.gtps.cloud/api/server/public/3587';
 
-            // ========== STATE ==========
-            // Riwayat chat: system message tidak ditampilkan, tapi dikirim ke API
-            const messages = [
-                { role: "system", content: "Anda adalah asisten AI yang ramah dan membantu. Anda dapat melihat dan menganalisis gambar yang dikirim user." }
-            ];
+        async function fetchServerStats() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Jaringan bermasalah');
+                
+                const result = await response.json();
+                
+                // GTPS Cloud API usually wraps data inside a "data" object
+                const data = result.data || result;
 
-            // Variabel untuk menyimpan file gambar yang dipilih
-            let selectedImageFile = null;
+                // Update DOM elements with fallback strings if undefined
+                document.getElementById('server-name').innerText = data.name || data.serverName || 'GTPS SERVER';
+                document.getElementById('players-online').innerText = data.players || data.online || '0';
+                document.getElementById('worlds-active').innerText = data.worlds || data.worlds_active || '0';
+                document.getElementById('ram-usage').innerText = data.ram || data.memory || '0 MB';
+                document.getElementById('server-tier').innerText = data.tier || 'Free';
+                
+                // Update Status Indicator
+                const statusText = document.getElementById('server-status');
+                const statusIndicator = document.getElementById('status-indicator');
+                
+                statusText.innerText = 'Online';
+                statusIndicator.classList.remove('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
+                statusIndicator.classList.add('bg-green-500', 'shadow-[0_0_8px_#22c55e]');
 
-            // Elemen DOM
-            const chatContainer = document.getElementById('chatContainer');
-            const userInput = document.getElementById('userInput');
-            const sendButton = document.getElementById('sendButton');
-            const fileInput = document.getElementById('fileInput');
-            const imagePreview = document.getElementById('imagePreview');
-            const previewImg = document.getElementById('previewImg');
-            const removeImageBtn = document.getElementById('removeImage');
+            } catch (error) {
+                console.error('Gagal mengambil data dari API:', error);
+                
+                // Set to offline state
+                document.getElementById('server-status').innerText = 'Offline';
+                const statusIndicator = document.getElementById('status-indicator');
+                statusIndicator.classList.remove('bg-green-500', 'shadow-[0_0_8px_#22c55e]');
+                statusIndicator.classList.add('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
 
-            // ========== FUNGSI BANTU ==========
-            // Scroll ke bawah
-            function scrollToBottom() {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                // Clear loaders
+                document.getElementById('players-online').innerText = '-';
+                document.getElementById('worlds-active').innerText = '-';
+                document.getElementById('ram-usage').innerText = '-';
+                document.getElementById('server-tier').innerText = '-';
             }
+        }
 
-            // Tambah pesan ke UI (bisa teks atau kombinasi)
-            function addMessageToUI(role, text, imageDataUrl = null) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', role === 'user' ? 'user-message' : 'bot-message');
+        // Fetch immediately on load
+        fetchServerStats();
 
-                // Jika ada gambar, tampilkan bersama teks
-                if (imageDataUrl) {
-                    const contentDiv = document.createElement('div');
-                    contentDiv.classList.add('image-preview-message');
-
-                    if (text) {
-                        const textP = document.createElement('p');
-                        textP.textContent = text;
-                        textP.style.marginBottom = '8px';
-                        contentDiv.appendChild(textP);
-                    }
-
-                    const img = document.createElement('img');
-                    img.src = imageDataUrl;
-                    img.alt = 'Uploaded image';
-                    img.addEventListener('click', () => window.open(imageDataUrl, '_blank')); // klik untuk perbesar
-                    contentDiv.appendChild(img);
-
-                    messageDiv.appendChild(contentDiv);
-                } else {
-                    // Hanya teks
-                    messageDiv.textContent = text;
-                }
-
-                chatContainer.appendChild(messageDiv);
-                scrollToBottom();
-            }
-
-            // Tampilkan indikator "AI sedang mengetik"
-            function showTypingIndicator() {
-                const indicator = document.createElement('div');
-                indicator.classList.add('message', 'bot-message', 'typing-indicator');
-                indicator.id = 'typingIndicator';
-                indicator.textContent = '...';
-                chatContainer.appendChild(indicator);
-                scrollToBottom();
-            }
-
-            function removeTypingIndicator() {
-                const indicator = document.getElementById('typingIndicator');
-                if (indicator) indicator.remove();
-            }
-
-            // Kirim pesan ke API OpenAI
-            async function sendToAI(userMessageContent) {
-                // Siapkan salinan messages untuk dikirim
-                const apiMessages = messages.map(m => {
-                    // Pastikan kita tidak mengirim properti tambahan
-                    return { role: m.role, content: m.content };
-                });
-
-                // Tambahkan pesan user terbaru (dalam format yang sudah disiapkan)
-                apiMessages.push({ role: "user", content: userMessageContent });
-
-                const requestBody = {
-                    model: MODEL,
-                    messages: apiMessages,
-                    max_tokens: 1000,
-                };
-
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${API_KEY}`
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error?.message || `HTTP error ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const assistantReply = data.choices[0].message.content;
-
-                    // Simpan ke riwayat messages
-                    messages.push({ role: "assistant", content: assistantReply });
-                    // Tampilkan ke UI
-                    addMessageToUI('assistant', assistantReply);
-                } catch (error) {
-                    console.error('Error calling OpenAI:', error);
-                    addMessageToUI('assistant', `Maaf, terjadi kesalahan: ${error.message}`);
-                }
-            }
-
-            // Proses pengiriman pesan (dari input user)
-            async function handleSendMessage() {
-                const text = userInput.value.trim();
-                const hasImage = selectedImageFile !== null;
-
-                if (!text && !hasImage) return; // kosong
-
-                // Nonaktifkan tombol kirim sementara
-                sendButton.disabled = true;
-
-                // 1. Tampilkan pesan user di UI
-                let imageDataUrlForUI = null;
-                let imageDataUrlForAPI = null;
-
-                if (hasImage) {
-                    // Buat data URL untuk tampilan (sama dengan yang untuk API)
-                    imageDataUrlForUI = await fileToDataUrl(selectedImageFile);
-                    imageDataUrlForAPI = imageDataUrlForUI; // kita pakai data URL langsung
-                }
-
-                addMessageToUI('user', text, imageDataUrlForUI);
-
-                // 2. Siapkan content untuk API (sesuai format multimodal)
-                let apiContent;
-                if (hasImage) {
-                    // Format content array: teks + gambar
-                    apiContent = [
-                        { type: "text", text: text || "Apa yang ada di gambar ini?" },
-                        { type: "image_url", image_url: { url: imageDataUrlForAPI } }
-                    ];
-                } else {
-                    apiContent = text; // string biasa
-                }
-
-                // Simpan pesan user ke dalam riwayat (dengan format API)
-                messages.push({ role: "user", content: apiContent });
-
-                // 3. Bersihkan input & preview
-                userInput.value = '';
-                clearSelectedImage();
-
-                // 4. Tampilkan indikator mengetik AI
-                showTypingIndicator();
-
-                // 5. Kirim ke API
-                try {
-                    await sendToAI(apiContent);
-                } finally {
-                    removeTypingIndicator();
-                    sendButton.disabled = false;
-                }
-            }
-
-            // Helper: konversi file ke data URL (base64)
-            function fileToDataUrl(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = (e) => reject(e);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            // Hapus gambar yang dipilih
-            function clearSelectedImage() {
-                selectedImageFile = null;
-                imagePreview.style.display = 'none';
-                previewImg.src = '';
-                fileInput.value = ''; // reset input file
-            }
-
-            // ========== EVENT LISTENERS ==========
-            // Kirim via tombol
-            sendButton.addEventListener('click', handleSendMessage);
-
-            // Kirim via enter (tanpa shift)
-            userInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                }
-            });
-
-            // Upload gambar
-            fileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                // Validasi tipe file
-                if (!file.type.startsWith('image/')) {
-                    alert('Harap pilih file gambar.');
-                    return;
-                }
-
-                selectedImageFile = file;
-                // Tampilkan preview
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    previewImg.src = event.target.result;
-                    imagePreview.style.display = 'flex';
-                };
-                reader.readAsDataURL(file);
-            });
-
-            // Hapus gambar
-            removeImageBtn.addEventListener('click', clearSelectedImage);
-
-            // Nonaktifkan tombol kirim saat tidak ada teks/gambar? (optional)
-            // Tapi kita handle di fungsi send
-
-            // Peringatan keamanan di console
-            console.warn('%cPERINGATAN: API key OpenAI terekspos di frontend. Jangan gunakan ini di produksi!', 'color: red; font-size: 16px; font-weight: bold;');
-        })();
+        // Refresh data every 15 seconds
+        setInterval(fetchServerStats, 15000);
     </script>
 </body>
 </html>
